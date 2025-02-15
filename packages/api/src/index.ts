@@ -58,3 +58,5 @@ app.get("/enable", async (c) => {
 });
 
 export { BenchmarkDurableObject };
+
+export default app;

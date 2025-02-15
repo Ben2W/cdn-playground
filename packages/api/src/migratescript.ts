@@ -10,7 +10,15 @@ export default async function migrateScript(db: D1Database) {
           success INTEGER NOT NULL,
           from_response___time INTEGER,
           from_response___time_iso TEXT,
-          from_response___hash TEXT,
+          from_response___hash TEXT
+        )
+
+        CREATE TABLE IF NOT EXISTS purges (
+          timestamp_before_purge INTEGER NOT NULL,
+          timestamp_after_purge INTEGER NOT NULL,
+          purge_duration_ms INTEGER NOT NULL,
+          created_at INTEGER NOT NULL,
+          timestamp_iso TEXT NOT NULL
         )
       `
     )

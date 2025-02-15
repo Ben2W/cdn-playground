@@ -63,6 +63,7 @@ export class BenchmarkDurableObject extends DurableObject {
 
       if (success) {
         const { currentTime, currentTimeIso, someHash } = parsed.data;
+
         await this.env.STATS_DB.prepare(
           "INSERT INTO benchmarks (timestamp_before_request, timestamp_after_request, duration_ms, success, from_response___time, from_response___time_iso, from_response___hash, location_hint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         )

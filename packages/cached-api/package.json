@@ -1,7 +1,7 @@
 {
   "name": "cdn-cached-api",
   "scripts": {
-    "dev": "wrangler dev --port 8081",
+    "dev": "wrangler dev --port 8084",
     "deploy": "wrangler deploy --minify"
   },
   "dependencies": {
