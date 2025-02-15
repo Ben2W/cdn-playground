@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cdn-cached-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false
+}
