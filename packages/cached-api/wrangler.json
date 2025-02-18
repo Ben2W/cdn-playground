@@ -4,5 +4,11 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-02-15",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "cdn-cached-api.ben-5ac.workers.dev",
+      "zone_name": "ben-5ac.workers.dev"
+    }
+  ]
 }

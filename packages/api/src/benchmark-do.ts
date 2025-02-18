@@ -17,6 +17,10 @@ export class BenchmarkDurableObject extends DurableObject {
     return this.isRunning;
   }
 
+  async benchmark() {
+    return { timeOfProcessing: Date.now() };
+  }
+
   async enable({
     enabled,
     locationHint,
@@ -47,7 +51,13 @@ export class BenchmarkDurableObject extends DurableObject {
 
     try {
       const startTime = Date.now();
-      const response = await fetch(this.env.BENCHMARK_URL);
+      const response = await fetch(this.env.BENCHMARK_URL, {
+        cf: {
+          // Cache response forever (365 days)
+          cacheTtl: 31536000,
+          cacheEverything: true,
+        },
+      });
       const endTime = Date.now();
       const duration = endTime - startTime;
 
