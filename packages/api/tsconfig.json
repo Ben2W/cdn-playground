@@ -16,6 +16,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "worker-configuration.d.ts"
+    "worker-configuration.d.ts",
+    "worker-hono-env.d.ts"
   ]
 }

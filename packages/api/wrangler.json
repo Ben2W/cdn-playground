@@ -1,28 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cdn-api",
+  "name": "dsa-api",
   "main": "src/index.ts",
-  "compatibility_date": "2025-02-15",
+  "compatibility_date": "2025-02-04",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
-
-  "vars": {
-    "BENCHMARK_URL": "http://localhost:8084"
-  },
   "d1_databases": [
     {
-      "binding": "STATS_DB",
-      "database_name": "cdn-playground",
+      "binding": "DB",
+      "database_name": "dsa-db",
       "database_id": "f790672f-8270-4cfc-b051-0fd370c13e67"
     }
-  ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "BENCHMARK_DO",
-        "class_name": "BenchmarkDurableObject"
-      }
-    ]
-  },
-  "migrations": [{ "new_classes": ["BenchmarkDurableObject"], "tag": "v1" }]
+  ]
 }
