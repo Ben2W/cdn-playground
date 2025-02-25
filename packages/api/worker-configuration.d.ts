@@ -3,4 +3,5 @@
 
 interface WorkerEnv {
   DB: D1Database;
+  ENVIRONMENT: "development" | "staging" | "production";
 }

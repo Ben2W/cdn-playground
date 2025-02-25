@@ -38,7 +38,6 @@ const InnerApp = () => {
   if (!auth.isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        {" "}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
