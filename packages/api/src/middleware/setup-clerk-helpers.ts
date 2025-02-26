@@ -13,19 +13,5 @@ export const setupClerkHelpers = async (
   }>,
   next: Next
 ) => {
-  c.set(
-    "clerkClient",
-    createClerkClient({
-      secretKey: c.env.CLERK_SECRET_KEY,
-    })
-  );
-
-  const auth = getAuth(c);
-
-  if (!auth?.userId) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  c.set("clerkUser", auth);
   return next();
 };

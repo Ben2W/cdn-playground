@@ -67,5 +67,5 @@ export const useClerkTheme = () => {
     return dark;
   }
 
-  return shadesOfPurple;
+  return undefined;
 };

@@ -1,5 +1,10 @@
 import * as React from "react";
-import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createRootRoute,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { ModeToggle } from "@/components/theme/toggle";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -11,20 +16,18 @@ import {
 } from "@clerk/clerk-react";
 import type { UserResource } from "@clerk/types";
 import { useClerkTheme } from "@/components/theme/provider";
-import { useTest } from "@/api-client/test";
 interface RootContext {
   auth: ReturnType<typeof useAuth>;
   user: UserResource;
 }
 
-export const Route = createRootRoute<RootContext>({
+export const Route = createRootRouteWithContext<RootContext>()({
   component: RootComponent,
 });
 
 function RootComponent() {
   const clerkTheme = useClerkTheme();
   const { organization } = useOrganization();
-  const { data } = useTest();
   return (
     <>
       <div className="p-2 flex gap-2 text-lg justify-between">
@@ -37,7 +40,6 @@ function RootComponent() {
         <ModeToggle />
       </div>
       <hr />
-      <pre>DATA: {JSON.stringify(data, null, 2)}</pre>
       <Outlet />
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="right" />
