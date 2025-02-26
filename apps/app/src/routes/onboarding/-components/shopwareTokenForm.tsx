@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/shad-ui/button";
 import {
@@ -15,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/shad-ui/form";
 import { Input } from "@/components/shad-ui/input";
+import { useAddShopwareToken } from "@/api-client/onboarding";
 
 const FormSchema = z.object({
   token: z.string().min(2, {
@@ -23,6 +25,9 @@ const FormSchema = z.object({
 });
 
 export function InputForm() {
+  const queryClient = useQueryClient();
+  const { mutate: addShopwareToken, isPending } = useAddShopwareToken();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -31,7 +36,12 @@ export function InputForm() {
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
+    addShopwareToken(data.token, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["onboarding"] });
+        console.log("Success");
+      },
+    });
   }
 
   return (
@@ -65,7 +75,9 @@ export function InputForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Submitting..." : "Submit"}
+        </Button>
       </form>
     </Form>
   );

@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { setupClerkHelpers } from "./middleware/setup-clerk-helpers";
 import { createClerkClient } from "@clerk/backend";
 import { SignedInAuthObject } from "@clerk/backend/internal";
-import { z } from "@hono/zod-openapi";
-import { hc } from "hono/client";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+const patchOnboardingSchema = z.object({
+  shopWareToken: z.string(),
+});
 
 const app = new Hono<{
   Bindings: WorkerEnv;
@@ -73,52 +75,75 @@ const app = new Hono<{
       organizationId: orgId,
     });
 
-    const { privateMetadata } = org;
+    const schema = z.object({
+      privateMetadata: z
+        .object({
+          shopWareToken: z.string().optional(),
+        })
+        .optional(),
+    });
 
-    if (!privateMetadata || !privateMetadata.shopWareToken) {
+    const parsed = schema.parse(org);
+    if (parsed.privateMetadata?.shopWareToken) {
+      return c.json({ onboarded: true, orgId, hasShopWareToken: true }, 200);
+    } else {
       return c.json({ onboarded: false, orgId, hasShopWareToken: false }, 200);
     }
-
-    return c.json({
-      onboarded: true,
-      orgId,
-      hasShopWareToken: !!privateMetadata.shopWareToken,
-    });
   })
-  .patch("/add-shopware-token", async (c) => {
-    const { orgId, orgRole } = c.get("clerkUser");
-    if (!orgId) {
-      return c.json({ error: "Organization not found" }, 404);
+  .patch(
+    "/add-shopware-token",
+    zValidator("json", patchOnboardingSchema),
+    async (c) => {
+      const { orgId, orgRole } = c.get("clerkUser");
+      if (!orgId) {
+        return c.json({ error: "Organization not found" }, 404);
+      }
+
+      if (orgRole !== "org:admin") {
+        return c.json(
+          { error: "You are not authorized to add a shopware token" },
+          403
+        );
+      }
+
+      const { shopWareToken } = c.req.valid("json");
+
+      try {
+        const res = await fetch(
+          "https://dealer-service-alternative.shop-ware.com/api/internal/chat/token",
+          {
+            method: "GET",
+            headers: {
+              Cookie: `_cookie_remember_token=${shopWareToken};`,
+            },
+          }
+        );
+        if (!res.ok) {
+          console.log(res);
+          return c.json({ error: "Invalid shopware token" }, 400);
+        }
+
+        const body = await res.json();
+
+        z.object({
+          chat_token: z.string(),
+        }).parse(body);
+      } catch (error) {
+        console.error(error);
+        return c.json({ error: "Invalid shopware token" }, 400);
+      }
+
+      await c
+        .get("clerkClient")
+        .organizations.updateOrganizationMetadata(orgId, {
+          privateMetadata: {
+            shopWareToken,
+          },
+        });
+
+      return c.json({ success: true });
     }
-
-    if (orgRole !== "admin") {
-      return c.json(
-        { error: "You are not authorized to add a shopware token" },
-        403
-      );
-    }
-
-    const schema = z.object({
-      shopWareToken: z.string().min(1, "Shop ware token is required"),
-    });
-
-    const result = await c.req.json();
-    const parsed = schema.safeParse(result);
-
-    if (!parsed.success) {
-      return c.json({ error: parsed.error.errors[0].message }, 400);
-    }
-
-    const { shopWareToken } = parsed.data;
-
-    await c.get("clerkClient").organizations.updateOrganizationMetadata(orgId, {
-      privateMetadata: {
-        shopWareToken,
-      },
-    });
-
-    return c.json({ success: true });
-  });
+  );
 
 app.onError((err, c) => {
   console.error(err);
