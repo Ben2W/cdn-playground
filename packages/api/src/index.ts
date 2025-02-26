@@ -6,6 +6,7 @@ import { SignedInAuthObject } from "@clerk/backend/internal";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { authenticateShopwareToken } from "./shop-ware/api-helpers/authenticate-shopware-token";
+import shopWareRouter from "./shop-ware/routes";
 const patchOnboardingSchema = z.object({
   shopWareToken: z.string(),
 });
@@ -133,7 +134,8 @@ const app = new Hono<{
 
       return c.json({ shopWareTokenPassedValidation: true });
     }
-  );
+  )
+  .route("/data", shopWareRouter);
 
 app.onError((err, c) => {
   console.error(err);

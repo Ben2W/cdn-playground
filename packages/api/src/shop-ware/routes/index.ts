@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { createClerkClient } from "@clerk/backend";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { z } from "zod";
+import { getWorkOrders } from "../api-helpers/get-work-data";
+import { getChatStaff } from "../api-helpers/get-chat-staff-data";
 const shopWareRouter = new Hono<{
   Bindings: WorkerEnv;
   Variables: {
@@ -50,6 +52,32 @@ const shopWareRouter = new Hono<{
     c.set("shopWareToken", result.data.privateMetadata.shopWareToken);
 
     return next();
+  })
+  .get("/work-orders", async (c) => {
+    console.log("work-orders");
+    const shopWareToken = c.get("shopWareToken");
+    const shopWareApiUrl = c.env.SHOPWARE_API_URL;
+
+    const result = await getWorkOrders({ shopWareToken, shopWareApiUrl });
+
+    if (!result.data) {
+      return c.json({ error: result.error }, 500);
+    } else {
+      return c.json(result.data);
+    }
+  })
+  .get("/chat-staff", async (c) => {
+    console.log("chat-staff");
+    const shopWareToken = c.get("shopWareToken");
+    const shopWareApiUrl = c.env.SHOPWARE_API_URL;
+
+    const result = await getChatStaff({ shopWareToken, shopWareApiUrl });
+
+    if (!result.data) {
+      return c.json({ error: result.error }, 500);
+    } else {
+      return c.json(result.data);
+    }
   });
 
 export default shopWareRouter;
