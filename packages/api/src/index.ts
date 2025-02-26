@@ -1,7 +1,18 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { clerkMiddleware } from "@hono/clerk-auth";
+import { setupClerkHelpers } from "./middleware/setup-clerk-helpers";
+import { createClerkClient } from "@clerk/backend";
+import { SignedInAuthObject } from "@clerk/backend/internal";
 
-const app = new Hono<{ Bindings: WorkerEnv }>()
+const app = new Hono<{
+  Bindings: WorkerEnv & Record<string, unknown>;
+  Variables: {
+    clerkClient: ReturnType<typeof createClerkClient>;
+    clerkUser: SignedInAuthObject;
+  };
+}>()
+
   .use("*", async (c, next) => {
     const env = c.env.ENVIRONMENT;
 
@@ -24,9 +35,11 @@ const app = new Hono<{ Bindings: WorkerEnv }>()
       maxAge: 86400,
     })(c, next);
   })
+  .use("*", clerkMiddleware())
+  .use("*", setupClerkHelpers)
   .get("/", (c) => {
-    console.log("Hello Hono!");
-    return c.json({ message: "Hello Hono!" });
+    console.log(`Hello ${c.get("clerkUser").userId}`);
+    return c.json({ message: "Hello Hono! " + c.get("clerkUser").userId });
   });
 
 app.onError((err, c) => {
