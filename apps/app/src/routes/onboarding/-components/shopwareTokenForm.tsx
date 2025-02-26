@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-
+import { toast } from "sonner";
 import { Button } from "@/components/shad-ui/button";
 import {
   Form,
@@ -37,9 +37,18 @@ export function InputForm() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     addShopwareToken(data.token, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["onboarding"] });
-        console.log("Success");
+      onSuccess: ({ shopWareTokenPassedValidation }) => {
+        if (shopWareTokenPassedValidation) {
+          queryClient.invalidateQueries({ queryKey: ["onboarding"] });
+          toast.success("Shopware token added");
+        } else {
+          toast.error("Invalid shopware token. Please try again.");
+        }
+      },
+      onError: (error) => {
+        toast.error(
+          `Failed to add shopware token. Error: ${error.message}. Please try again.`
+        );
       },
     });
   }

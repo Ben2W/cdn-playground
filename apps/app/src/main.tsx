@@ -7,8 +7,8 @@ import "./styles/globals.css";
 import { ThemeProvider } from "./components/theme/provider";
 import { ClerkProvider, SignIn, useAuth, useUser } from "@clerk/clerk-react";
 import { useClerkTheme } from "./components/theme/provider";
-import { cn } from "./lib/utils";
 import { Loading } from "./components/loading";
+import { Toaster } from "@/components/shad-ui/sonner";
 
 // Set up a Router instance
 const router = createRouter({
@@ -73,6 +73,7 @@ const App = () => {
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
           <InnerApp />
+          <Toaster />
         </ClerkProvider>
       </ThemeProvider>
     </QueryClientProvider>

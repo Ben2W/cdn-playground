@@ -1,8 +1,9 @@
 import { useOnboarding } from "@/api-client/onboarding";
 import { useClerkTheme } from "@/components/theme/provider";
 import { OrganizationList, useAuth } from "@clerk/clerk-react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { InputForm } from "./-components/shopwareTokenForm";
+import { Loading } from "@/components/loading";
 
 export const Route = createFileRoute("/onboarding")({
   component: RouteComponent,
@@ -35,7 +36,11 @@ function RouteComponent() {
 }
 
 function OnboardingComponent() {
-  const { data } = useOnboarding();
+  const { data, isLoading } = useOnboarding();
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   if (!data?.hasShopWareToken) {
     return (
@@ -45,5 +50,5 @@ function OnboardingComponent() {
     );
   }
 
-  return <div>{JSON.stringify(data, null, 2)}</div>;
+  return <Navigate to="/dashboard" />;
 }

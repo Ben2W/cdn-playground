@@ -8,7 +8,8 @@
   "vars": {
     "ENVIRONMENT": "development",
     "CLERK_PUBLISHABLE_KEY": "pk_test_Zmxvd2luZy1yaW5ndGFpbC00OS5jbGVyay5hY2NvdW50cy5kZXYk",
-    "CLERK_SECRET_KEY": "sk_test_21Y4v1S9h0m2bDvFRtzwiHPdOk3OW9oaISlvtpBQEY"
+    "CLERK_SECRET_KEY": "sk_test_21Y4v1S9h0m2bDvFRtzwiHPdOk3OW9oaISlvtpBQEY",
+    "SHOPWARE_API_URL": "https://dealer-service-alternative.shop-ware.com"
   },
   "d1_databases": [
     {

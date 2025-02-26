@@ -6,4 +6,5 @@ interface WorkerEnv {
   ENVIRONMENT: "development" | "staging" | "production";
   CLERK_PUBLISHABLE_KEY: string;
   CLERK_SECRET_KEY: string;
+  SHOPWARE_API_URL: string;
 }
