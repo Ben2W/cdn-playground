@@ -13,7 +13,7 @@ const ChatStaffSchema = z.object({
   shopware_roles: z.array(z.string()),
 });
 
-const ChatStaffResponseSchema = z.array(ChatStaffSchema);
+export const chatStaffResponseSchema = z.array(ChatStaffSchema);
 
 type ChatStaff = z.infer<typeof ChatStaffSchema>;
 type Result =
@@ -44,7 +44,7 @@ export const getChatStaff = async ({
     }
 
     const body = await res.json();
-    const parsedBody = ChatStaffResponseSchema.parse(body);
+    const parsedBody = chatStaffResponseSchema.parse(body);
 
     return { data: parsedBody, error: null };
   } catch (error) {

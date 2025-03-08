@@ -54,7 +54,6 @@ const shopWareRouter = new Hono<{
     return next();
   })
   .get("/work-orders", async (c) => {
-    console.log("work-orders");
     const shopWareToken = c.get("shopWareToken");
     const shopWareApiUrl = c.env.SHOPWARE_API_URL;
 
@@ -67,7 +66,6 @@ const shopWareRouter = new Hono<{
     }
   })
   .get("/chat-staff", async (c) => {
-    console.log("chat-staff");
     const shopWareToken = c.get("shopWareToken");
     const shopWareApiUrl = c.env.SHOPWARE_API_URL;
 

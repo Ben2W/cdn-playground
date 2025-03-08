@@ -7,17 +7,167 @@ import {
   CardTitle,
 } from "@/components/shad-ui/card";
 import { useWorkOrders } from "@/api-client/get-data";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import type { WorkOrder } from "@dsa/api/src/shop-ware/api-helpers/get-work-data";
 import {
-  ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/shad-ui/chart";
+  PieChart,
+  Clock,
+  CheckCircle2,
+  Timer,
+  CalendarClock,
+} from "lucide-react";
+import { Progress } from "@/components/shad-ui/progress";
+import { Label as ShadcnLabel } from "@/components/shad-ui/label"; // Assuming there's a Label component
 
-export function Workflow() {
+const colors = {
+  gray: "bg-gray-200 dark:bg-gray-800",
+  stone: "bg-stone-200 dark:bg-stone-800",
+  pink: "bg-pink-200 dark:bg-pink-800",
+  yellow: "bg-yellow-200 dark:bg-yellow-800",
+  slate: "bg-slate-200 dark:bg-slate-800",
+  green: "bg-green-200 dark:bg-green-800",
+};
+
+const Label = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => {
+  if (label === "Repair") {
+    return (
+      <ShadcnLabel className={`px-2 py-1 rounded ${colors.stone}`}>
+        {children}
+      </ShadcnLabel>
+    );
+  }
+
+  if (label === "Diagnosis") {
+    return (
+      <ShadcnLabel className={`px-2 py-1 rounded ${colors.pink}`}>
+        {children}
+      </ShadcnLabel>
+    );
+  }
+
+  if (label === "Employee") {
+    return (
+      <ShadcnLabel className={`px-2 py-1 rounded ${colors.yellow}`}>
+        {children}
+      </ShadcnLabel>
+    );
+  }
+
+  if (label === "Scheduled") {
+    return (
+      <ShadcnLabel className={`px-2 py-1 rounded ${colors.slate}`}>
+        {children}
+      </ShadcnLabel>
+    );
+  }
+
+  if (label === "Tire") {
+    return (
+      <ShadcnLabel className={`px-2 py-1 rounded ${colors.green}`}>
+        {children}
+      </ShadcnLabel>
+    );
+  }
+
+  return (
+    <ShadcnLabel className={`px-2 py-1 rounded ${colors.gray}`}>
+      {children}
+    </ShadcnLabel>
+  );
+};
+
+function processTechnicianData(workOrders: WorkOrder[]) {
+  const technicianMap = new Map();
+
+  workOrders.forEach((order) => {
+    const technicianId =
+      order.technician?.id ||
+      (order.involved_technicians.length > 0
+        ? order.involved_technicians[0]
+        : null);
+
+    if (technicianId) {
+      const technicianName =
+        order.technician?.full_name || order.advisor?.full_name;
+
+      if (!technicianMap.has(technicianId)) {
+        technicianMap.set(technicianId, {
+          id: technicianId,
+          name: technicianName,
+          completedOrders: [],
+          activeOrders: [],
+          scheduledOrders: [],
+          completedHours: 0,
+          totalHours: 0,
+        });
+      }
+
+      const technicianData = technicianMap.get(technicianId);
+      const completedHours = parseFloat(
+        order.completed_labors_total_hours || "0"
+      );
+      const totalHours = parseFloat(order.labors_total_hours || "0");
+
+      technicianData.completedHours += completedHours;
+      technicianData.totalHours += totalHours;
+
+      // Categorize orders
+      if (order.state === "invoice") {
+        technicianData.completedOrders.push(order);
+      } else if (order.state === "in_progress") {
+        technicianData.activeOrders.push(order);
+      } else if (order.state === "estimate") {
+        technicianData.scheduledOrders.push(order);
+      }
+    }
+
+    // Ensure active_tech_ids are of type (number | undefined)[]
+    if (order.service_statuses) {
+      order.service_statuses.forEach((status) => {
+        status.active_tech_ids = status.active_tech_ids.map(
+          (id) => id ?? undefined
+        );
+      });
+    }
+  });
+
+  return Array.from(technicianMap.values());
+}
+
+function WorkOrderCard({ order }: { order: WorkOrder }) {
+  return (
+    <div className="mb-2 p-3 bg-secondary/10 rounded-lg ">
+      <div className="flex justify-between items-center">
+        {order.status && (
+          <span className="font-medium"> {order.status.text}</span>
+        )}
+        <span className="text-xs">{order.labors_total_hours}hrs</span>
+      </div>
+
+      <div className="text-sm mt-1">
+        {order.vehicle.year} {order.vehicle.make} {order.vehicle.model}
+      </div>
+      <div className="text-xs text-muted-foreground mt-1">
+        {order.customer.name}
+      </div>
+      <div className="flex gap-1 mt-2">
+        {order.label && (
+          <Label label={order.label.text}>{order.label.text}</Label>
+        )}
+      </div>
+      <div className="text-xs text-muted-foreground mt-4 flex justify-end">
+        #{order.number}
+      </div>
+    </div>
+  );
+}
+
+export function TechnicianWorkloadCards() {
   const { data: workOrders, isLoading } = useWorkOrders();
 
   if (isLoading) {
@@ -28,147 +178,81 @@ export function Workflow() {
     return <div>No work orders found</div>;
   }
 
-  // Calculate statistics
-  const totalOrders = workOrders.length;
-  const completedOrders = workOrders.filter(
-    (wo) => wo.state === "completed"
-  ).length;
-  const inProgressOrders = workOrders.filter(
-    (wo) => wo.state === "in_progress"
-  ).length;
-  const partsNeededOrders = workOrders.filter(
-    (wo) => wo.parts_are_needed
-  ).length;
+  const technicianData = processTechnicianData(workOrders);
 
-  // Prepare data for bar chart
-  const chartData = [
-    { name: "Total", value: totalOrders },
-    { name: "Completed", value: completedOrders },
-    { name: "In Progress", value: inProgressOrders },
-    { name: "Parts Needed", value: partsNeededOrders },
-  ];
-
-  // Calculate employee workload
-  const employeeWorkload = workOrders.reduce((acc, wo) => {
-    wo.involved_technicians.forEach((tech) => {
-      if (!acc[tech.id]) {
-        acc[tech.id] = {
-          name: tech.full_name,
-          count: 0,
-        };
-      }
-      acc[tech.id].count += 1;
-    });
-    return acc;
-  }, {});
-
-  const employeeData = Object.values(employeeWorkload).map((emp) => ({
-    name: emp.name,
-    workload: emp.count,
-  }));
-
-  const chartConfig = {
-    total: {
-      label: "Total",
-      color: "#2563eb",
-    },
-    completed: {
-      label: "Completed",
-      color: "#16a34a",
-    },
-    inProgress: {
-      label: "In Progress",
-      color: "#f59e0b",
-    },
-    partsNeeded: {
-      label: "Parts Needed",
-      color: "#dc2626",
-    },
-  } satisfies ChartConfig;
+  // Sort the technician data by status
+  technicianData.forEach((technician) => {
+    technician.activeOrders.sort((a: WorkOrder, b: WorkOrder) =>
+      a.status?.row_order > b.status?.row_order ? 1 : -1
+    );
+    technician.scheduledOrders.sort((a: WorkOrder, b: WorkOrder) =>
+      a.status?.row_order > b.status?.row_order ? 1 : -1
+    );
+    technician.completedOrders.sort((a: WorkOrder, b: WorkOrder) =>
+      a.status?.row_order > b.status?.row_order ? 1 : -1
+    );
+  });
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Total Work Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalOrders}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Completed Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">
-            {completedOrders}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>In Progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-blue-600">
-            {inProgressOrders}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Parts Needed</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">
-            {partsNeededOrders}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="col-span-full">
-        <CardHeader>
-          <CardTitle>Work Orders Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-            <BarChart accessibilityLayer data={chartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="name"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="value" fill="var(--color-total)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="col-span-full">
-        <CardHeader>
-          <CardTitle>Employee Workload</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {employeeData.map((emp) => (
-              <div key={emp.name} className="flex items-center justify-between">
-                <div className="font-medium">{emp.name}</div>
-                <div className="text-sm text-gray-500">
-                  {emp.workload} assigned work orders
-                </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {technicianData.map((technician) => (
+        <Card key={technician.id} className="overflow-hidden">
+          <CardHeader className="bg-secondary/5">
+            <CardTitle className="flex justify-between items-center">
+              <span>{technician.name}</span>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm">
+                  {technician.completedHours}/{technician.totalHours}hrs
+                </span>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardTitle>
+            <Progress
+              value={
+                (technician.completedHours / (technician.totalHours || 1)) * 100
+              }
+              className="h-2"
+            />
+          </CardHeader>
+          <CardContent className="p-4">
+            {technician.activeOrders.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Timer className="w-4 h-4 text-blue-500" />
+                  <h3 className="font-semibold">In Progress</h3>
+                </div>
+                {technician.activeOrders.map((order: WorkOrder) => (
+                  <WorkOrderCard key={order.id} order={order} />
+                ))}
+              </div>
+            )}
+
+            {technician.scheduledOrders.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarClock className="w-4 h-4 text-orange-500" />
+                  <h3 className="font-semibold">Provided Estimate</h3>
+                </div>
+                {technician.scheduledOrders.map((order: WorkOrder) => (
+                  <WorkOrderCard key={order.id} order={order} />
+                ))}
+              </div>
+            )}
+
+            {technician.completedOrders.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <h3 className="font-semibold">Completed with Invoice</h3>
+                </div>
+                {technician.completedOrders.map((order: WorkOrder) => (
+                  <WorkOrderCard key={order.id} order={order} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
