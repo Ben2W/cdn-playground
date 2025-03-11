@@ -208,7 +208,8 @@ export function TechnicianWorkloadCards() {
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm">
-                  {technician.completedHours}/{technician.totalHours}hrs
+                  {technician.completedHours.toFixed(1)}/
+                  {technician.totalHours.toFixed(1)}hrs
                 </span>
               </div>
             </CardTitle>

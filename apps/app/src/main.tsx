@@ -39,8 +39,6 @@ const InnerApp = () => {
   if (!auth.isLoaded) {
     return (
       <>
-        <div className="py-6"></div>
-        <hr />
         <Loading />
       </>
     );
