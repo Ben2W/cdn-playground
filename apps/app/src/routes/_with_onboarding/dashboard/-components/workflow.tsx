@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/shad-ui/progress";
 import { Label as ShadcnLabel } from "@/components/shad-ui/label"; // Assuming there's a Label component
+import { Loading } from "@/components/loading";
 
 const colors = {
   gray: "bg-gray-200 dark:bg-gray-800",
@@ -141,7 +142,7 @@ function processTechnicianData(workOrders: WorkOrder[]) {
 
 function WorkOrderCard({ order }: { order: WorkOrder }) {
   return (
-    <div className="mb-2 p-3 bg-secondary/10 rounded-lg ">
+    <div className="mb-2 p-3 py-6 bg-secondary/10 rounded-lg">
       <div className="flex justify-between items-center">
         {order.status && (
           <span className="font-medium"> {order.status.text}</span>
@@ -155,13 +156,11 @@ function WorkOrderCard({ order }: { order: WorkOrder }) {
       <div className="text-xs text-muted-foreground mt-1">
         {order.customer.name}
       </div>
-      <div className="flex gap-1 mt-2">
+      <div className="flex gap-1 mt-2 justify-between items-center">
         {order.label && (
           <Label label={order.label.text}>{order.label.text}</Label>
         )}
-      </div>
-      <div className="text-xs text-muted-foreground mt-4 flex justify-end">
-        #{order.number}
+        <span className="text-xs text-muted-foreground">#{order.number}</span>
       </div>
     </div>
   );
@@ -171,7 +170,7 @@ export function TechnicianWorkloadCards() {
   const { data: workOrders, isLoading } = useWorkOrders();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   if (!workOrders) {
@@ -183,20 +182,26 @@ export function TechnicianWorkloadCards() {
   // Sort the technician data by status
   technicianData.forEach((technician) => {
     technician.activeOrders.sort((a: WorkOrder, b: WorkOrder) =>
-      a.status?.row_order > b.status?.row_order ? 1 : -1
+      (a.status?.row_order ?? Infinity) > (b.status?.row_order ?? Infinity)
+        ? 1
+        : -1
     );
     technician.scheduledOrders.sort((a: WorkOrder, b: WorkOrder) =>
-      a.status?.row_order > b.status?.row_order ? 1 : -1
+      (a.status?.row_order ?? Infinity) > (b.status?.row_order ?? Infinity)
+        ? 1
+        : -1
     );
     technician.completedOrders.sort((a: WorkOrder, b: WorkOrder) =>
-      a.status?.row_order > b.status?.row_order ? 1 : -1
+      (a.status?.row_order ?? Infinity) > (b.status?.row_order ?? Infinity)
+        ? 1
+        : -1
     );
   });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {technicianData.map((technician) => (
-        <Card key={technician.id} className="overflow-hidden">
+        <Card key={technician.id}>
           <CardHeader className="bg-secondary/5">
             <CardTitle className="flex justify-between items-center">
               <span>{technician.name}</span>

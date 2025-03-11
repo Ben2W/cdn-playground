@@ -37,7 +37,13 @@ const InnerApp = () => {
   const { user } = useUser();
   const clerkTheme = useClerkTheme();
   if (!auth.isLoaded) {
-    return <Loading />;
+    return (
+      <>
+        <div className="py-6"></div>
+        <hr />
+        <Loading />
+      </>
+    );
   }
 
   if (!user) {

@@ -36,6 +36,7 @@ function RootComponent() {
             <OrganizationSwitcher appearance={{ baseTheme: clerkTheme }} />
           )}
           <UserButton appearance={{ baseTheme: clerkTheme }} />
+          <div className="w-[var(--clerk-user-button-width)] h-[var(--clerk-user-button-height)]"></div>
         </div>
         <ModeToggle />
       </div>
